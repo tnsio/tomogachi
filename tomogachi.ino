@@ -21,7 +21,7 @@ ST7735 TFT SPI display pins for Arduino Uno/Nano:
 #include "Ucglib.h"  // Include Ucglib library to drive the display
 
 #define REFRESH_PERIOD 3000
-#define DEBOUNCE_TIME 100
+#define DEBOUNCE_TIME 75
 #define RIGHT_BUTTON_PIN PD7
 #define SELECT_BUTTON_PIN PD4
 #define LEFT_BUTTON_PIN PD2
@@ -54,7 +54,7 @@ ST7735 TFT SPI display pins for Arduino Uno/Nano:
 #define SLEEP_REPLENISH 0
 #define JOY_REPLENISH 0.1
 #define WARNING_BEEP_THRESHOLD 0.2
-#define SLEEP_LIGHT_THRESHOLD 500
+#define SLEEP_LIGHT_THRESHOLD 350
 
 ButtonDebounce leftButton(LEFT_BUTTON_PIN, DEBOUNCE_TIME);
 ButtonDebounce selectButton(SELECT_BUTTON_PIN, DEBOUNCE_TIME);
@@ -166,6 +166,7 @@ void onSelectInMenu(const int state) {
     }
     if (menuIndex == SLEEP && analogRead(LIGHT_PIN) < SLEEP_LIGHT_THRESHOLD) {
       sleeping = true;
+      noTone(BUZZER_PIN);
     }
   }
 }
@@ -207,7 +208,7 @@ void loop(void)
   }
 
   if(sleeping) {
-    int deltaVirtualTimeInSeconds = (currentMillis - prevMillis) / 1000 * SPEED;
+    double deltaVirtualTimeInSeconds = SPEED * (currentMillis - prevMillis) / 1000;
     if(newToSleeping) {
       newToSleeping = false;
       ucg.clearScreen();
@@ -217,11 +218,11 @@ void loop(void)
 
     meters[SLEEP] += SLEEP_REPLENISH_SPEED * deltaVirtualTimeInSeconds;
     prevMillis = currentMillis;
-    if (meters[SLEEP] > 1) {
+    if (meters[SLEEP] >= 1) {
       meters[SLEEP] = 1;
       wakeUp();
     }
-
+    
     return;
   }
 
